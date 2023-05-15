@@ -10,7 +10,10 @@ function hashMessage(message) {
 }
 
 const privateKey = '$YOUR_PRIVATE_KEY'
+
+// insert the transaction amount and recipient below
 const message = JSON.stringify({ 'amount': 20, 'recipient': '$RECIPIENT_ADDRESS' })
+
 const messageHash = hashMessage(message)
 const signature = secp.secp256k1.sign(messageHash, privateKey);
 const recovery = signature.recovery
