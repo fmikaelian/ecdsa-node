@@ -16,6 +16,12 @@ const balances = {
   "$ADDRESS_WALLET_3": 75,
 };
 
+const nonces = {
+  "$ADDRESS_WALLET_1": 0,
+  "$ADDRESS_WALLET_2": 0,
+  "$ADDRESS_WALLET_3": 0,
+};
+
 app.get("/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = balances[address] || 0;
@@ -23,7 +29,7 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { signatureCompactHex, signatureRecovery, recipient, amount } = req.body;
+  const { address, recipient, amount, signatureCompactHex, signatureRecovery } = req.body;
 
   // re-build the message hash from the form input data
   function hashMessage(message) {
@@ -32,9 +38,11 @@ app.post("/send", (req, res) => {
     return hash
   }
 
-  const message = JSON.stringify({ 'amount': amount, 'recipient': recipient })
+  setInitialNonce(address);
+
+  const message = JSON.stringify({ 'address': address, 'amount': amount, 'recipient': recipient, 'nonce': nonces[address] })
   const messageHash = hashMessage(message)
-  console.log(messageHash)
+  console.log(message)
 
   // recovery of sender address from the signature, provided the message hash from UI
   const signature = secp.secp256k1.Signature.fromCompact(hex=signatureCompactHex).addRecoveryBit(recovery=signatureRecovery)
@@ -42,8 +50,6 @@ app.post("/send", (req, res) => {
 
   const publicKey = signature.recoverPublicKey(messageHash).toRawBytes()
   
-  console.log(toHex(publicKey))
-
   function getAddress(publicKey) {
     const pks = publicKey.slice(1);
     const hash = keccak256(pks)
@@ -53,17 +59,22 @@ app.post("/send", (req, res) => {
   }
 
   const sender = getAddress(publicKey)
-  
-  setInitialBalance(sender);
-  setInitialBalance(recipient);
+  console.log(sender)
 
-  if (balances[sender] < amount) {
-    res.status(400).send({ message: "Not enough funds!" });
-  } else {
-    balances[sender] -= amount;
-    balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
+  if (sender === address) {
+    setInitialBalance(sender);
+    setInitialBalance(recipient);
+  
+    if (balances[sender] < amount) {
+      res.status(400).send({ message: "Not enough funds!" });
+    } else {
+      balances[sender] -= amount;
+      balances[recipient] += amount;
+      res.send({ balance: balances[sender] });
+    }
+    nonces[sender] += 1
   }
+
 });
 
 app.listen(port, () => {
@@ -73,5 +84,11 @@ app.listen(port, () => {
 function setInitialBalance(address) {
   if (!balances[address]) {
     balances[address] = 0;
+  }
+}
+
+function setInitialNonce(address) {
+  if (!nonces[address]) {
+    nonces[address] = 0;
   }
 }

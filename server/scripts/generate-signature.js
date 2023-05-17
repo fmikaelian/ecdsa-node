@@ -10,9 +10,20 @@ function hashMessage(message) {
 }
 
 const privateKey = '$YOUR_PRIVATE_KEY'
+const publicKey = secp.secp256k1.getPublicKey(privateKey);
 
-// insert the transaction amount and recipient below
-const message = JSON.stringify({ 'amount': 20, 'recipient': '$RECIPIENT_ADDRESS' })
+function getAddress(publicKey) {
+    const pks = publicKey.slice(1);
+    const hash = keccak256(pks)
+    const hashs = hash.slice(-20)
+    const address = '0x' + toHex(hashs).toLowerCase()
+    return address
+  }
+
+const address = getAddress(publicKey)
+
+// define your transaction message by inserting the transaction amount, recipient and nonce below
+const message = JSON.stringify({ 'address': address, 'amount': 20, 'recipient': '$RECIPIENT_ADDRESS', 'nonce': 0 })
 
 const messageHash = hashMessage(message)
 const signature = secp.secp256k1.sign(messageHash, privateKey);

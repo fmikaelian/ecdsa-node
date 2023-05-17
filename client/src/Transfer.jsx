@@ -1,7 +1,7 @@
 import { useState } from "react";
 import server from "./server";
 
-function Transfer({ signatureCompactHex, signatureRecovery, setBalance }) {
+function Transfer({ setBalance, address, signatureCompactHex, signatureRecovery }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -14,10 +14,11 @@ function Transfer({ signatureCompactHex, signatureRecovery, setBalance }) {
       const {
         data: { balance },
       } = await server.post(`send`, {
+        address: address,
+        recipient: recipient,
+        amount: parseInt(sendAmount),
         signatureCompactHex: signatureCompactHex,
         signatureRecovery: parseInt(signatureRecovery),
-        amount: parseInt(sendAmount),
-        recipient,
       });
       setBalance(balance);
     } catch (ex) {

@@ -24,7 +24,7 @@ function App() {
         signatureRecovery={signatureRecovery}
         setSignatureRecovery={setSignatureRecovery}
       />
-      <Transfer setBalance={setBalance} signatureCompactHex={signatureCompactHex} signatureRecovery={signatureRecovery} />
+      <Transfer setBalance={setBalance} address={address} signatureCompactHex={signatureCompactHex} signatureRecovery={signatureRecovery} />
     </div>
   );
 }
